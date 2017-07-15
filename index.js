@@ -1,6 +1,6 @@
 var Alexa = require('alexa-sdk');
 var request = require('request');
-const weatherAPIKey = "";
+const weatherAPIKey = "2865f839ffd44cabdfd9f3561b703562";
 const skillName = "Headsail Chooser";
 
 function decideSail(data,windSpeed){
@@ -61,6 +61,7 @@ function decideSail(data,windSpeed){
 var handlers = {
 
     "ChooseSail": function () {
+      console.log("------ ChooseSail --------------------")
       deviceId = this.event.context.System.device.deviceId;
       consentToken = "Bearer " +this.event.context.System.user.permissions.consentToken;
       var self = this;
@@ -92,7 +93,7 @@ var handlers = {
             self.emit(':tellWithCard', speechOutput, skillName, speechOutput);
           })
         }else{
-          zip = data.postalCode;
+          zip = "94119";
           weatherUrl="http://api.openweathermap.org/data/2.5/weather?zip="+zip+",us&appid="+weatherAPIKey;
           console.log("Checking Weather --- " + weatherUrl);
           request(weatherUrl,function(error,response,body){
@@ -102,8 +103,8 @@ var handlers = {
             var windDirection = weatherData.wind.deg;
             var town = weatherData.name;
             var sail = decideSail(self.event.request.intent.slots,windSpeed);
-            var speechOutput = "Please enable location services with the Alexa App" +
-            "Until you do we will use the weather in San Francisco, a great place to sail" +
+            var speechOutput = "Please enable location services with the Alexa App. " +
+            "Until you do we will use the weather in San Francisco, a great place to sail. " +
             "you should use your " + sail + " while sailing in " + town +
             " today as the wind is blowing " + windSpeed + " knots from a heading of " + windDirection + "degrees";
             self.emit(':tellWithCard', speechOutput, skillName, speechOutput);
@@ -112,10 +113,27 @@ var handlers = {
 
         }
       );
+    }else {
+      zip = "94119";
+      weatherUrl="http://api.openweathermap.org/data/2.5/weather?zip="+zip+",us&appid="+weatherAPIKey;
+      console.log("Checking Weather --- " + weatherUrl);
+      request(weatherUrl,function(error,response,body){
+        console.log(body);
+        var weatherData = JSON.parse(body);
+        var windSpeed = weatherData.wind.speed;
+        var windDirection = weatherData.wind.deg;
+        var town = weatherData.name;
+        var sail = decideSail(self.event.request.intent.slots,windSpeed);
+        var speechOutput = "Please enable location services with the Alexa App" +
+        "Until you do we will use the weather in San Francisco, a great place to sail" +
+        "you should use your " + sail + " while sailing in " + town +
+        " today as the wind is blowing " + windSpeed + " knots from a heading of " + windDirection + "degrees";
+        self.emit(':tellWithCard', speechOutput, skillName, speechOutput);
+    });
+
+
     }
-
-
-    },
+  },
 
     "AboutIntent": function () {
         var speechOutput = "Head Sail Chooser is by Conner Fullerton";
@@ -153,9 +171,10 @@ var handlers = {
 
 };
 
+
 exports.handler = function (event, context) {
     var alexa = Alexa.handler(event, context);
-    alexa.appId = "";
+    alexa.appId = "amzn1.ask.skill.31e26e66-4f05-4039-bbbb-558bcfd72bb8";
     alexa.registerHandlers(handlers);
     alexa.execute();
 };
